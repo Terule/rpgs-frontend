@@ -1,10 +1,10 @@
 import { Button, Link, Typography } from "@mui/material";
 import axios from "axios";
-import { useState } from "react";
+import { useSnackbar  } from 'notistack';
 import { useForm } from "react-hook-form";
-import { Link as RouterLink } from "react-router-dom";
-import FormFileInput from "../formInputs/FormFileInput"
-import FormTextInput from "../formInputs/FormTextInput";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import FormTextInput from "../inputs/FormTextInput";
+import FormFileInput from "../inputs/FormFileInput";
 
 const defaultValues = {
   name: "",
@@ -15,20 +15,24 @@ const defaultValues = {
 }
 
 const RegisterForm = () => {
-  const [image, setImage] = useState(null);
   const { handleSubmit, control, getValues } = useForm({ defaultValues });
+  const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate();
+
   const onSubmit = async (data) => {
     await axios.post("http://localhost:4001/register", data, {
       headers: {
         "Content-Type": "multipart/form-data"
       }
     }).then((response) => {
-      console.log(response)
-      setImage(response.data.user.imageUrl)
+      enqueueSnackbar(response.data.message, { variant: 'success' })
+      navigate('/login')
     }).catch((error) => {
     console.log(error)
+      enqueueSnackbar(error.response.data.message, { variant: 'error' })
   })
   }
+
   return (
     <>
       <FormTextInput name="name" type="text" control={control} label="Name" />
@@ -40,7 +44,6 @@ const RegisterForm = () => {
       <Typography variant="caption" sx={{m: "0 0 0 6px", fontStyle: 'italic', color: 'grey'}} noWrap>
         Already have an acccount? <Link replace underline="none" component={RouterLink} to="/login">Login</Link>
       </Typography>
-      {image && <img src={`http://localhost:4001/${image}`} />}
     </>
   )
 }
